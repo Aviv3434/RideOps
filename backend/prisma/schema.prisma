@@ -8,28 +8,18 @@ datasource db {
 
 enum UserRole {
   COMPANY_ADMIN
-  CUSTOMER_USER
-}
-
-enum TripStatus {
-  PENDING_APPROVAL
-  APPROVED
-  REJECTED
-  CANCELLED
-  EXPORTED
+  CLIENT_USER
 }
 
 model TransportationCompany {
-  id        String   @id @default(uuid())
-  name      String
-  email     String?
-  phone     String?
-  isActive  Boolean  @default(true)
+  id       String  @id @default(uuid())
+  name     String
+  email    String?
+  phone    String?
+  isActive Boolean @default(true)
 
-  customers Customer[]
-  users     User[]
-  trips     Trip[]
-  exports   ExportBatch[]
+  users   User[]
+  clients Client[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -37,8 +27,8 @@ model TransportationCompany {
   @@map("transportation_companies")
 }
 
-model Customer {
-  id                      String  @id @default(uuid())
+model Client {
+  id                      String @id @default(uuid())
   transportationCompanyId String
 
   name         String
@@ -50,19 +40,18 @@ model Customer {
   transportationCompany TransportationCompany @relation(fields: [transportationCompanyId], references: [id])
 
   users User[]
-  trips Trip[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([transportationCompanyId])
-  @@map("customers")
+  @@map("clients")
 }
 
 model User {
   id                      String @id @default(uuid())
   transportationCompanyId String
-  customerId              String?
+  clientId                String?
 
   email        String
   passwordHash String
@@ -70,109 +59,17 @@ model User {
   role         UserRole
   isActive     Boolean @default(true)
 
+  lastLoginAt DateTime?
+
   transportationCompany TransportationCompany @relation(fields: [transportationCompanyId], references: [id])
-  customer              Customer?             @relation(fields: [customerId], references: [id])
-
-  createdTrips  Trip[] @relation("TripCreatedBy")
-  approvedTrips Trip[] @relation("TripApprovedBy")
-  rejectedTrips Trip[] @relation("TripRejectedBy")
-
-  createdExports ExportBatch[]
+  client                Client?               @relation(fields: [clientId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([transportationCompanyId, email])
   @@index([transportationCompanyId])
-  @@index([customerId])
+  @@index([clientId])
+  @@index([role])
   @@map("users")
-}
-
-model Trip {
-  id                      String @id @default(uuid())
-  transportationCompanyId String
-  customerId              String
-
-  tripNumber Int
-
-  pickupDateTime DateTime
-  pickupLocation String
-  destination    String
-  passengerCount Int
-  notes          String?
-
-  status TripStatus @default(PENDING_APPROVAL)
-
-  rejectionReason String?
-
-  createdByUserId  String?
-  approvedByUserId String?
-  rejectedByUserId String?
-
-  approvedAt  DateTime?
-  rejectedAt  DateTime?
-  cancelledAt DateTime?
-
-  isExported Boolean   @default(false)
-  exportedAt DateTime?
-
-  duplicateWarning Boolean @default(false)
-
-  transportationCompany TransportationCompany @relation(fields: [transportationCompanyId], references: [id])
-  customer              Customer              @relation(fields: [customerId], references: [id])
-
-  createdByUser  User? @relation("TripCreatedBy", fields: [createdByUserId], references: [id])
-  approvedByUser User? @relation("TripApprovedBy", fields: [approvedByUserId], references: [id])
-  rejectedByUser User? @relation("TripRejectedBy", fields: [rejectedByUserId], references: [id])
-
-  exportBatchTrips ExportBatchTrip[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([transportationCompanyId, tripNumber])
-  @@index([transportationCompanyId])
-  @@index([customerId])
-  @@index([status])
-  @@index([pickupDateTime])
-  @@index([isExported])
-  @@map("trips")
-}
-
-model ExportBatch {
-  id                      String @id @default(uuid())
-  transportationCompanyId String
-
-  exportedByUserId String?
-
-  fileName   String?
-  tripsCount Int
-
-  dateFrom DateTime?
-  dateTo   DateTime?
-
-  transportationCompany TransportationCompany @relation(fields: [transportationCompanyId], references: [id])
-  exportedByUser        User?                 @relation(fields: [exportedByUserId], references: [id])
-
-  trips ExportBatchTrip[]
-
-  createdAt DateTime @default(now())
-
-  @@index([transportationCompanyId])
-  @@map("export_batches")
-}
-
-model ExportBatchTrip {
-  id            String @id @default(uuid())
-  exportBatchId String
-  tripId        String
-
-  exportBatch ExportBatch @relation(fields: [exportBatchId], references: [id])
-  trip        Trip        @relation(fields: [tripId], references: [id])
-
-  createdAt DateTime @default(now())
-
-  @@unique([exportBatchId, tripId])
-  @@index([tripId])
-  @@map("export_batch_trips")
 }
