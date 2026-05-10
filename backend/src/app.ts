@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import { prisma } from "./shared/prisma";
+import authRoutes from "./modules/auth/auth.routes";
+import { errorMiddleware } from "./middlewares/error.middleware";
 
 const app = express();
 
@@ -15,9 +17,16 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.get("/api/db-check", async (_req, res) => {
+  const companiesCount = await prisma.transportationCompany.count();
+
   res.json({
-    status: "Database connection works",
+    status: "ok",
+    companiesCount,
   });
 });
+
+app.use("/api/auth", authRoutes);
+
+app.use(errorMiddleware);
 
 export default app;
