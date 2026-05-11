@@ -3,6 +3,7 @@ import cors from "cors";
 import { prisma } from "./shared/prisma";
 import authRoutes from "./modules/auth/auth.routes";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import tripsRoutes from "./modules/trips/trips.routes";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.get("/api/db-check", async (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/trips", tripsRoutes);
 
 app.use(errorMiddleware);
 

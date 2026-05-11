@@ -11,6 +11,13 @@ enum UserRole {
   CLIENT_USER
 }
 
+enum TripStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
 model TransportationCompany {
   id       String  @id @default(uuid())
   name     String
@@ -20,6 +27,7 @@ model TransportationCompany {
 
   users   User[]
   clients Client[]
+  trips   Trip[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -40,6 +48,7 @@ model Client {
   transportationCompany TransportationCompany @relation(fields: [transportationCompanyId], references: [id])
 
   users User[]
+  trips Trip[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -64,6 +73,11 @@ model User {
   transportationCompany TransportationCompany @relation(fields: [transportationCompanyId], references: [id])
   client                Client?               @relation(fields: [clientId], references: [id])
 
+  createdTrips   Trip[] @relation("TripCreatedBy")
+  approvedTrips  Trip[] @relation("TripApprovedBy")
+  rejectedTrips  Trip[] @relation("TripRejectedBy")
+  cancelledTrips Trip[] @relation("TripCancelledBy")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -72,4 +86,54 @@ model User {
   @@index([clientId])
   @@index([role])
   @@map("users")
+}
+
+model Trip {
+  id                      String @id @default(uuid())
+  transportationCompanyId String
+  clientId                String
+
+  tripNumber Int
+
+  pickupDateTime DateTime
+  pickupLocation String
+  destination    String
+  passengerCount Int
+  notes          String?
+
+  status TripStatus @default(PENDING_APPROVAL)
+
+  duplicateWarning Boolean @default(false)
+
+  rejectionReason String?
+
+  createdByUserId   String?
+  approvedByUserId  String?
+  rejectedByUserId  String?
+  cancelledByUserId String?
+
+  approvedAt  DateTime?
+  rejectedAt  DateTime?
+  cancelledAt DateTime?
+
+  transportationCompany TransportationCompany @relation(fields: [transportationCompanyId], references: [id])
+  client                Client                @relation(fields: [clientId], references: [id])
+
+  createdByUser   User? @relation("TripCreatedBy", fields: [createdByUserId], references: [id])
+  approvedByUser  User? @relation("TripApprovedBy", fields: [approvedByUserId], references: [id])
+  rejectedByUser  User? @relation("TripRejectedBy", fields: [rejectedByUserId], references: [id])
+  cancelledByUser User? @relation("TripCancelledBy", fields: [cancelledByUserId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([transportationCompanyId, tripNumber])
+
+  @@index([transportationCompanyId])
+  @@index([clientId])
+  @@index([status])
+  @@index([pickupDateTime])
+  @@index([duplicateWarning])
+
+  @@map("trips")
 }
