@@ -1,5 +1,6 @@
 import { TripStatus } from "@prisma/client";
 import { prisma } from "../../shared/prisma";
+import { AppError } from "../../shared/errors";
 
 type CreateTripInput = {
   pickupDateTime: string;
@@ -21,7 +22,7 @@ export async function createTrip(
   currentUser: CurrentUser
 ) {
   if (!currentUser.clientId) {
-    throw new Error("Client user does not have clientId");
+    throw new AppError("Client user does not have clientId", 400);
   }
 
   const latestTrip = await prisma.trip.findFirst({
@@ -49,7 +50,7 @@ export async function createTrip(
 
   const duplicateWarning = Boolean(existingTrip);
 
-  const trip = await prisma.trip.create({
+  return prisma.trip.create({
     data: {
       transportationCompanyId: currentUser.transportationCompanyId,
       clientId: currentUser.clientId,
@@ -79,8 +80,6 @@ export async function createTrip(
       },
     },
   });
-
-  return trip;
 }
 
 export async function getTrips(
@@ -132,4 +131,64 @@ export async function getTrips(
       totalPages: Math.ceil(total / limit),
     },
   };
+}
+
+export async function getTripById(
+  tripId: string,
+  currentUser: CurrentUser
+) {
+  const whereClause =
+    currentUser.role === "COMPANY_ADMIN"
+      ? {
+          id: tripId,
+          transportationCompanyId: currentUser.transportationCompanyId,
+        }
+      : {
+          id: tripId,
+          transportationCompanyId: currentUser.transportationCompanyId,
+          clientId: currentUser.clientId ?? undefined,
+        };
+
+  const trip = await prisma.trip.findFirst({
+    where: whereClause,
+    include: {
+      client: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      createdByUser: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+      approvedByUser: {
+        select: {
+          id: true,
+          fullName: true,
+        },
+      },
+      rejectedByUser: {
+        select: {
+          id: true,
+          fullName: true,
+        },
+      },
+      cancelledByUser: {
+        select: {
+          id: true,
+          fullName: true,
+        },
+      },
+    },
+  });
+
+  if (!trip) {
+    throw new AppError("Trip not found", 404);
+  }
+
+  return trip;
 }
