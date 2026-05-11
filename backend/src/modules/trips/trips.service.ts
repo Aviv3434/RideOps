@@ -212,7 +212,7 @@ export async function approveTrip(
     throw new AppError("Trip is already approved", 400);
   }
 
-  const updatedTrip = await prisma.trip.update({
+  return prisma.trip.update({
     where: {
       id: trip.id,
     },
@@ -237,6 +237,56 @@ export async function approveTrip(
       },
     },
   });
+}
 
-  return updatedTrip;
+export async function rejectTrip(
+  tripId: string,
+  rejectionReason: string,
+  currentUser: CurrentUser
+) {
+  const trip = await prisma.trip.findFirst({
+    where: {
+      id: tripId,
+      transportationCompanyId: currentUser.transportationCompanyId,
+    },
+  });
+
+  if (!trip) {
+    throw new AppError("Trip not found", 404);
+  }
+
+  if (trip.status === TripStatus.APPROVED) {
+    throw new AppError("Approved trip cannot be rejected", 400);
+  }
+
+  if (trip.status === TripStatus.REJECTED) {
+    throw new AppError("Trip is already rejected", 400);
+  }
+
+  return prisma.trip.update({
+    where: {
+      id: trip.id,
+    },
+    data: {
+      status: TripStatus.REJECTED,
+      rejectionReason,
+      rejectedAt: new Date(),
+      rejectedByUserId: currentUser.userId,
+    },
+    include: {
+      client: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      rejectedByUser: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+    },
+  });
 }

@@ -9,12 +9,14 @@ import {
   getTripsController,
   getTripByIdController,
   approveTripController,
+  rejectTripController,
 } from "./trips.controller";
 
 import {
   createTripSchema,
   getTripsQuerySchema,
   tripIdParamsSchema,
+  rejectTripSchema,
 } from "./trips.validation";
 
 const router = Router();
@@ -40,6 +42,15 @@ router.patch(
   requireRole(["COMPANY_ADMIN"]),
   validateRequest(tripIdParamsSchema, "params"),
   approveTripController
+);
+
+router.patch(
+  "/:id/reject",
+  authMiddleware,
+  requireRole(["COMPANY_ADMIN"]),
+  validateRequest(tripIdParamsSchema, "params"),
+  validateRequest(rejectTripSchema),
+  rejectTripController
 );
 
 router.get(

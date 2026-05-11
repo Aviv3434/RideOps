@@ -56,9 +56,26 @@ export async function approveTripController(
   try {
     const tripId = String(req.params.id);
 
-    const trip = await tripsService.approveTrip(
-     tripId,
-     req.user
+    const trip = await tripsService.approveTrip(tripId, req.user);
+
+    res.json(trip);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function rejectTripController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const tripId = String(req.params.id);
+
+    const trip = await tripsService.rejectTrip(
+      tripId,
+      req.body.rejectionReason,
+      req.user
     );
 
     res.json(trip);
