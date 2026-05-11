@@ -82,3 +82,54 @@ export async function createTrip(
 
   return trip;
 }
+
+export async function getTrips(
+  currentUser: CurrentUser,
+  page: number,
+  limit: number
+) {
+  const skip = (page - 1) * limit;
+
+  const whereClause =
+    currentUser.role === "COMPANY_ADMIN"
+      ? {
+          transportationCompanyId: currentUser.transportationCompanyId,
+        }
+      : {
+          transportationCompanyId: currentUser.transportationCompanyId,
+          clientId: currentUser.clientId ?? undefined,
+        };
+
+  const [trips, total] = await Promise.all([
+    prisma.trip.findMany({
+      where: whereClause,
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        pickupDateTime: "asc",
+      },
+      skip,
+      take: limit,
+    }),
+
+    prisma.trip.count({
+      where: whereClause,
+    }),
+  ]);
+
+  return {
+    data: trips,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
