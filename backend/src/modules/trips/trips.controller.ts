@@ -47,3 +47,22 @@ export async function getTripByIdController(
     next(error);
   }
 }
+
+export async function approveTripController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const tripId = String(req.params.id);
+
+    const trip = await tripsService.approveTrip(
+     tripId,
+     req.user
+    );
+
+    res.json(trip);
+  } catch (error) {
+    next(error);
+  }
+}

@@ -192,3 +192,51 @@ export async function getTripById(
 
   return trip;
 }
+
+export async function approveTrip(
+  tripId: string,
+  currentUser: CurrentUser
+) {
+  const trip = await prisma.trip.findFirst({
+    where: {
+      id: tripId,
+      transportationCompanyId: currentUser.transportationCompanyId,
+    },
+  });
+
+  if (!trip) {
+    throw new AppError("Trip not found", 404);
+  }
+
+  if (trip.status === TripStatus.APPROVED) {
+    throw new AppError("Trip is already approved", 400);
+  }
+
+  const updatedTrip = await prisma.trip.update({
+    where: {
+      id: trip.id,
+    },
+    data: {
+      status: TripStatus.APPROVED,
+      approvedAt: new Date(),
+      approvedByUserId: currentUser.userId,
+    },
+    include: {
+      client: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      approvedByUser: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  return updatedTrip;
+}

@@ -8,6 +8,7 @@ import {
   createTripController,
   getTripsController,
   getTripByIdController,
+  approveTripController,
 } from "./trips.controller";
 
 import {
@@ -31,6 +32,14 @@ router.get(
   authMiddleware,
   validateRequest(getTripsQuerySchema, "query"),
   getTripsController
+);
+
+router.patch(
+  "/:id/approve",
+  authMiddleware,
+  requireRole(["COMPANY_ADMIN"]),
+  validateRequest(tripIdParamsSchema, "params"),
+  approveTripController
 );
 
 router.get(
