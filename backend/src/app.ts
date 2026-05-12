@@ -5,6 +5,9 @@ import authRoutes from "./modules/auth/auth.routes";
 import { errorMiddleware } from "./middlewares/error.middleware";
 import tripsRoutes from "./modules/trips/trips.routes";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes";
+import exportsRoutes from "./modules/exports/exports.routes";
+console.log("EXPORTS ROUTES IMPORTED:", exportsRoutes);
+console.log("APP FILE LOADED");
 
 const app = express();
 
@@ -30,6 +33,7 @@ app.get("/api/db-check", async (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/trips", tripsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/exports", exportsRoutes);
 
 app.use(errorMiddleware);
 

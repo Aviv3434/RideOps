@@ -104,6 +104,7 @@ model Trip {
   status TripStatus @default(PENDING_APPROVAL)
 
   duplicateWarning Boolean @default(false)
+  isExported Boolean @default(false)
 
   rejectionReason String?
 
@@ -115,6 +116,7 @@ model Trip {
   approvedAt  DateTime?
   rejectedAt  DateTime?
   cancelledAt DateTime?
+  exportedAt DateTime?
 
   transportationCompany TransportationCompany @relation(fields: [transportationCompanyId], references: [id])
   client                Client                @relation(fields: [clientId], references: [id])
@@ -134,6 +136,7 @@ model Trip {
   @@index([status])
   @@index([pickupDateTime])
   @@index([duplicateWarning])
+  @@index([isExported])
 
   @@map("trips")
 }
