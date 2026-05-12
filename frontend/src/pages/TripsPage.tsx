@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   getTrips,
@@ -25,6 +26,8 @@ function getStatusLabel(status: TripStatus) {
 }
 
 export function TripsPage() {
+  const navigate = useNavigate();
+
   const [trips, setTrips] = useState<Trip[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -184,7 +187,11 @@ export function TripsPage() {
               )}
 
               {trips.map((trip) => (
-                <tr key={trip.id} className="border-b last:border-b-0">
+                <tr
+                  key={trip.id}
+                  onClick={() => navigate(`/trips/${trip.id}`)}
+                  className="border-b last:border-b-0 cursor-pointer hover:bg-gray-100"
+                >
                   <td className="p-3">{trip.tripNumber}</td>
                   <td className="p-3">{trip.client.name}</td>
                   <td className="p-3">

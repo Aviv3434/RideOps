@@ -13,13 +13,44 @@ export type Trip = {
   pickupLocation: string;
   destination: string;
   passengerCount: number;
+  notes?: string | null;
   status: TripStatus;
   duplicateWarning: boolean;
+  rejectionReason?: string | null;
+  approvedAt?: string | null;
+  rejectedAt?: string | null;
+  cancelledAt?: string | null;
   isExported?: boolean;
+  exportedAt?: string | null;
+
   client: {
     id: string;
     name: string;
   };
+
+  createdByUser?: {
+    id: string;
+    fullName: string;
+    email?: string;
+  } | null;
+
+  approvedByUser?: {
+    id: string;
+    fullName: string;
+    email?: string;
+  } | null;
+
+  rejectedByUser?: {
+    id: string;
+    fullName: string;
+    email?: string;
+  } | null;
+
+  cancelledByUser?: {
+    id: string;
+    fullName: string;
+    email?: string;
+  } | null;
 };
 
 export type TripsResponse = {
@@ -47,6 +78,35 @@ export async function getTrips(
   const response = await apiClient.get<TripsResponse>("/trips", {
     params,
   });
+
+  return response.data;
+}
+
+export async function getTripById(tripId: string): Promise<Trip> {
+  const response = await apiClient.get<Trip>(`/trips/${tripId}`);
+
+  return response.data;
+}
+
+export async function approveTrip(tripId: string): Promise<Trip> {
+  const response = await apiClient.patch<Trip>(`/trips/${tripId}/approve`);
+
+  return response.data;
+}
+
+export async function rejectTrip(
+  tripId: string,
+  rejectionReason: string
+): Promise<Trip> {
+  const response = await apiClient.patch<Trip>(`/trips/${tripId}/reject`, {
+    rejectionReason,
+  });
+
+  return response.data;
+}
+
+export async function cancelTrip(tripId: string): Promise<Trip> {
+  const response = await apiClient.patch<Trip>(`/trips/${tripId}/cancel`);
 
   return response.data;
 }
