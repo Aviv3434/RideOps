@@ -24,6 +24,17 @@ export function Sidebar() {
         </NavLink>
 
         <NavLink
+          to="/trips"
+          className={({ isActive }) =>
+            `block rounded px-3 py-2 ${
+              isActive ? "bg-gray-700" : "hover:bg-gray-800"
+            }`
+          }
+        >
+          Trips
+        </NavLink>
+
+        <NavLink
           to={user?.role === "COMPANY_ADMIN" ? "/company" : "/client"}
           className={({ isActive }) =>
             `block rounded px-3 py-2 ${
