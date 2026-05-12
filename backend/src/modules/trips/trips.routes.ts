@@ -10,6 +10,7 @@ import {
   getTripByIdController,
   approveTripController,
   rejectTripController,
+  cancelTripController,
 } from "./trips.controller";
 
 import {
@@ -51,6 +52,13 @@ router.patch(
   validateRequest(tripIdParamsSchema, "params"),
   validateRequest(rejectTripSchema),
   rejectTripController
+);
+
+router.patch(
+  "/:id/cancel",
+  authMiddleware,
+  validateRequest(tripIdParamsSchema, "params"),
+  cancelTripController
 );
 
 router.get(

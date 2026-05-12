@@ -290,3 +290,58 @@ export async function rejectTrip(
     },
   });
 }
+
+export async function cancelTrip(
+  tripId: string,
+  currentUser: CurrentUser
+) {
+  const whereClause =
+    currentUser.role === "COMPANY_ADMIN"
+      ? {
+          id: tripId,
+          transportationCompanyId: currentUser.transportationCompanyId,
+        }
+      : {
+          id: tripId,
+          transportationCompanyId: currentUser.transportationCompanyId,
+          clientId: currentUser.clientId ?? undefined,
+        };
+
+  const trip = await prisma.trip.findFirst({
+    where: whereClause,
+  });
+
+  if (!trip) {
+    throw new AppError("Trip not found", 404);
+  }
+
+  if (trip.status === TripStatus.CANCELLED) {
+    throw new AppError("Trip is already cancelled", 400);
+  }
+
+  return prisma.trip.update({
+    where: {
+      id: trip.id,
+    },
+    data: {
+      status: TripStatus.CANCELLED,
+      cancelledAt: new Date(),
+      cancelledByUserId: currentUser.userId,
+    },
+    include: {
+      client: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      cancelledByUser: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+    },
+  });
+}

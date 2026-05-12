@@ -83,3 +83,19 @@ export async function rejectTripController(
     next(error);
   }
 }
+
+export async function cancelTripController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const tripId = String(req.params.id);
+
+    const trip = await tripsService.cancelTrip(tripId, req.user);
+
+    res.json(trip);
+  } catch (error) {
+    next(error);
+  }
+}
