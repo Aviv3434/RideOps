@@ -19,13 +19,13 @@ export function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const user = await login(email, password);
+    await login(email, password);
 
-      navigate("/dashboard");
-    } catch {
-      setError("Invalid email or password");
+    navigate("/dashboard");
+    }  catch {
+    setError("Invalid email or password");
     } finally {
-      setIsSubmitting(false);
+    setIsSubmitting(false);
     }
   }
 

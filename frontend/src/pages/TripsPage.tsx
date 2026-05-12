@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "../auth/AuthContext";
+import { exportApprovedTrips } from "../api/exportsApi";
+
 import {
   getTrips,
   type Trip,
@@ -27,6 +30,7 @@ function getStatusLabel(status: TripStatus) {
 
 export function TripsPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [page, setPage] = useState(1);
@@ -39,6 +43,10 @@ export function TripsPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState("");
+  const [exportError, setExportError] = useState("");
 
   async function loadTrips() {
     try {
@@ -67,6 +75,23 @@ export function TripsPage() {
     loadTrips();
   }, [page, status, sortBy, sortOrder]);
 
+  async function handleExportApprovedTrips() {
+    try {
+      setIsExporting(true);
+      setExportMessage("");
+      setExportError("");
+
+      await exportApprovedTrips();
+
+      setExportMessage("Approved trips exported successfully");
+      loadTrips();
+    } catch {
+      setExportError("Failed to export approved trips");
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   function handleSearchSubmit(event: FormEvent) {
     event.preventDefault();
     setPage(1);
@@ -85,7 +110,29 @@ export function TripsPage() {
           <h1 className="text-2xl font-bold">Trips</h1>
           <p className="text-gray-500">View and filter trip requests</p>
         </div>
+
+        {user?.role === "COMPANY_ADMIN" && (
+          <button
+            onClick={handleExportApprovedTrips}
+            disabled={isExporting}
+            className="rounded bg-black text-white px-4 py-2 disabled:opacity-50"
+          >
+            {isExporting ? "Exporting..." : "Export Approved"}
+          </button>
+        )}
       </div>
+
+      {exportMessage && (
+        <div className="mb-4 rounded bg-green-50 text-green-700 p-3">
+          {exportMessage}
+        </div>
+      )}
+
+      {exportError && (
+        <div className="mb-4 rounded bg-red-50 text-red-700 p-3">
+          {exportError}
+        </div>
+      )}
 
       <div className="mb-4 rounded bg-white border p-4">
         <form
