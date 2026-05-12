@@ -12,9 +12,5 @@ export function RoleRedirectPage() {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role === "COMPANY_ADMIN") {
-    return <Navigate to="/company" replace />;
-  }
-
-  return <Navigate to="/client" replace />;
+  return <Navigate to="/dashboard" replace />;
 }

@@ -21,11 +21,7 @@ export function LoginPage() {
     try {
       const user = await login(email, password);
 
-      if (user.role === "COMPANY_ADMIN") {
-        navigate("/company");
-      } else {
-        navigate("/client");
-      }
+      navigate("/dashboard");
     } catch {
       setError("Invalid email or password");
     } finally {
