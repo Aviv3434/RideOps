@@ -1,3 +1,4 @@
+import { TripStatus } from "@prisma/client";
 import { z } from "zod";
 
 export const createTripSchema = z.object({
@@ -25,6 +26,21 @@ export const getTripsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
 
   limit: z.coerce.number().int().positive().max(100).default(10),
+
+  status: z.nativeEnum(TripStatus).optional(),
+
+  pickupDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "pickupDate must be YYYY-MM-DD")
+    .optional(),
+
+  clientId: z.uuid("Invalid client id").optional(),
+
+  search: z.string().min(1).max(255).optional(),
+
+  sortBy: z.enum(["pickupDateTime", "createdAt"]).default("pickupDateTime"),
+
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
 });
 
 export const tripIdParamsSchema = z.object({

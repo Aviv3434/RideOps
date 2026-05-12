@@ -21,10 +21,18 @@ export async function getTripsController(
   next: NextFunction
 ) {
   try {
-    const page = Number(req.query.page || 1);
-    const limit = Number(req.query.limit || 10);
-
-    const result = await tripsService.getTrips(req.user, page, limit);
+    const result = await tripsService.getTrips(req.user, {
+      page: Number(req.query.page || 1),
+      limit: Number(req.query.limit || 10),
+      status: req.query.status as any,
+      pickupDate: req.query.pickupDate as string | undefined,
+      clientId: req.query.clientId as string | undefined,
+      search: req.query.search as string | undefined,
+      sortBy:
+        (req.query.sortBy as "pickupDateTime" | "createdAt") ||
+        "pickupDateTime",
+      sortOrder: (req.query.sortOrder as "asc" | "desc") || "asc",
+    });
 
     res.json(result);
   } catch (error) {

@@ -17,6 +17,17 @@ type CurrentUser = {
   clientId?: string | null;
 };
 
+type GetTripsFilters = {
+  page: number;
+  limit: number;
+  status?: TripStatus;
+  pickupDate?: string;
+  clientId?: string;
+  search?: string;
+  sortBy: "pickupDateTime" | "createdAt";
+  sortOrder: "asc" | "desc";
+};
+
 export async function createTrip(
   data: CreateTripInput,
   currentUser: CurrentUser
@@ -84,20 +95,77 @@ export async function createTrip(
 
 export async function getTrips(
   currentUser: CurrentUser,
-  page: number,
-  limit: number
+  filters: GetTripsFilters
 ) {
+  const {
+    page,
+    limit,
+    status,
+    pickupDate,
+    clientId,
+    search,
+    sortBy,
+    sortOrder,
+  } = filters;
+
   const skip = (page - 1) * limit;
 
-  const whereClause =
-    currentUser.role === "COMPANY_ADMIN"
-      ? {
-          transportationCompanyId: currentUser.transportationCompanyId,
-        }
-      : {
-          transportationCompanyId: currentUser.transportationCompanyId,
-          clientId: currentUser.clientId ?? undefined,
-        };
+  const whereClause: any = {
+    transportationCompanyId: currentUser.transportationCompanyId,
+  };
+
+  if (currentUser.role === "CLIENT_USER") {
+    whereClause.clientId = currentUser.clientId;
+  }
+
+  if (currentUser.role === "COMPANY_ADMIN" && clientId) {
+    whereClause.clientId = clientId;
+  }
+
+  if (status) {
+    whereClause.status = status;
+  }
+
+  if (pickupDate) {
+    const startOfDay = new Date(`${pickupDate}T00:00:00.000Z`);
+    const endOfDay = new Date(`${pickupDate}T23:59:59.999Z`);
+
+    whereClause.pickupDateTime = {
+      gte: startOfDay,
+      lte: endOfDay,
+    };
+  }
+
+  if (search) {
+    whereClause.OR = [
+      {
+        pickupLocation: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+      {
+        destination: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+      {
+        notes: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+      {
+        client: {
+          name: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      },
+    ];
+  }
 
   const [trips, total] = await Promise.all([
     prisma.trip.findMany({
@@ -111,7 +179,7 @@ export async function getTrips(
         },
       },
       orderBy: {
-        pickupDateTime: "asc",
+        [sortBy]: sortOrder,
       },
       skip,
       take: limit,
@@ -129,6 +197,14 @@ export async function getTrips(
       limit,
       total,
       totalPages: Math.ceil(total / limit),
+    },
+    filters: {
+      status,
+      pickupDate,
+      clientId: currentUser.role === "COMPANY_ADMIN" ? clientId : undefined,
+      search,
+      sortBy,
+      sortOrder,
     },
   };
 }
