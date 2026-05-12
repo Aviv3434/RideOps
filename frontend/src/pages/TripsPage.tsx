@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/AuthContext";
 import { exportApprovedTrips } from "../api/exportsApi";
@@ -11,22 +11,14 @@ import {
   type TripStatus,
 } from "../api/tripsApi";
 
-const PAGE_LIMIT = 10;
+import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
+import { EmptyState } from "../components/ui/EmptyState";
+import { LoadingState } from "../components/ui/LoadingState";
+import { StatusBadge } from "../components/ui/Badge";
+import { Toast } from "../components/ui/Toast";
 
-function getStatusLabel(status: TripStatus) {
-  switch (status) {
-    case "PENDING_APPROVAL":
-      return "Pending";
-    case "APPROVED":
-      return "Approved";
-    case "REJECTED":
-      return "Rejected";
-    case "CANCELLED":
-      return "Cancelled";
-    default:
-      return status;
-  }
-}
+const PAGE_LIMIT = 10;
 
 export function TripsPage() {
   const navigate = useNavigate();
@@ -104,45 +96,37 @@ export function TripsPage() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Trips</h1>
           <p className="text-gray-500">View and filter trip requests</p>
         </div>
 
-        {user?.role === "COMPANY_ADMIN" && (
-          <button
-            onClick={handleExportApprovedTrips}
-            disabled={isExporting}
-            className="rounded bg-black text-white px-4 py-2 disabled:opacity-50"
-          >
-            {isExporting ? "Exporting..." : "Export Approved"}
-          </button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {user?.role === "CLIENT_USER" && (
+            <Link to="/trips/new">
+              <Button>Create Trip</Button>
+            </Link>
+          )}
+
+          {user?.role === "COMPANY_ADMIN" && (
+            <Button onClick={handleExportApprovedTrips} disabled={isExporting}>
+              {isExporting ? "Exporting..." : "Export Approved"}
+            </Button>
+          )}
+        </div>
       </div>
 
-      {exportMessage && (
-        <div className="mb-4 rounded bg-green-50 text-green-700 p-3">
-          {exportMessage}
-        </div>
-      )}
-
-      {exportError && (
-        <div className="mb-4 rounded bg-red-50 text-red-700 p-3">
-          {exportError}
-        </div>
-      )}
-
-      <div className="mb-4 rounded bg-white border p-4">
+      <Card className="p-4">
         <form
           onSubmit={handleSearchSubmit}
-          className="grid grid-cols-1 md:grid-cols-4 gap-3"
+          className="grid grid-cols-1 gap-3 md:grid-cols-4"
         >
           <div>
-            <label className="block text-sm font-medium mb-1">Search</label>
+            <label className="mb-1 block text-sm font-medium">Search</label>
             <input
-              className="w-full border rounded px-3 py-2"
+              className="w-full rounded-lg border px-3 py-2"
               placeholder="Destination, pickup, notes..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -150,9 +134,9 @@ export function TripsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
+            <label className="mb-1 block text-sm font-medium">Status</label>
             <select
-              className="w-full border rounded px-3 py-2"
+              className="w-full rounded-lg border px-3 py-2"
               value={status}
               onChange={(event) =>
                 handleStatusChange(event.target.value as TripStatus | "")
@@ -167,9 +151,9 @@ export function TripsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Sort By</label>
+            <label className="mb-1 block text-sm font-medium">Sort By</label>
             <select
-              className="w-full border rounded px-3 py-2"
+              className="w-full rounded-lg border px-3 py-2"
               value={sortBy}
               onChange={(event) =>
                 setSortBy(event.target.value as "pickupDateTime" | "createdAt")
@@ -181,9 +165,9 @@ export function TripsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Order</label>
+            <label className="mb-1 block text-sm font-medium">Order</label>
             <select
-              className="w-full border rounded px-3 py-2"
+              className="w-full rounded-lg border px-3 py-2"
               value={sortOrder}
               onChange={(event) =>
                 setSortOrder(event.target.value as "asc" | "desc")
@@ -195,89 +179,113 @@ export function TripsPage() {
           </div>
 
           <div className="md:col-span-4">
-            <button className="rounded bg-black text-white px-4 py-2">
-              Apply Filters
-            </button>
+            <Button type="submit">Apply Filters</Button>
           </div>
         </form>
-      </div>
+      </Card>
 
-      {isLoading && <div>Loading trips...</div>}
+      {isLoading && <LoadingState text="Loading trips..." />}
 
       {error && (
-        <div className="rounded bg-red-50 text-red-700 p-4">{error}</div>
+        <div className="rounded-xl bg-red-50 p-4 text-red-700">{error}</div>
       )}
 
-      {!isLoading && !error && (
-        <div className="rounded bg-white border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left p-3">Trip #</th>
-                <th className="text-left p-3">Client</th>
-                <th className="text-left p-3">Pickup Time</th>
-                <th className="text-left p-3">Pickup</th>
-                <th className="text-left p-3">Destination</th>
-                <th className="text-left p-3">Passengers</th>
-                <th className="text-left p-3">Status</th>
-                <th className="text-left p-3">Duplicate</th>
-              </tr>
-            </thead>
+      {!isLoading && !error && trips.length === 0 && (
+        <EmptyState
+          title="No trips found"
+          description="Try changing the filters or create a new trip."
+          action={
+            user?.role === "CLIENT_USER" ? (
+              <Link to="/trips/new">
+                <Button>Create Trip</Button>
+              </Link>
+            ) : undefined
+          }
+        />
+      )}
 
-            <tbody>
-              {trips.length === 0 && (
+      {!isLoading && !error && trips.length > 0 && (
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="border-b bg-gray-50">
                 <tr>
-                  <td className="p-4 text-gray-500" colSpan={8}>
-                    No trips found.
-                  </td>
+                  <th className="p-3 text-left">Trip #</th>
+                  <th className="p-3 text-left">Client</th>
+                  <th className="p-3 text-left">Pickup Time</th>
+                  <th className="p-3 text-left">Pickup</th>
+                  <th className="p-3 text-left">Destination</th>
+                  <th className="p-3 text-left">Passengers</th>
+                  <th className="p-3 text-left">Status</th>
+                  <th className="p-3 text-left">Duplicate</th>
                 </tr>
-              )}
+              </thead>
 
-              {trips.map((trip) => (
-                <tr
-                  key={trip.id}
-                  onClick={() => navigate(`/trips/${trip.id}`)}
-                  className="border-b last:border-b-0 cursor-pointer hover:bg-gray-100"
-                >
-                  <td className="p-3">{trip.tripNumber}</td>
-                  <td className="p-3">{trip.client.name}</td>
-                  <td className="p-3">
-                    {new Date(trip.pickupDateTime).toLocaleString()}
-                  </td>
-                  <td className="p-3">{trip.pickupLocation}</td>
-                  <td className="p-3">{trip.destination}</td>
-                  <td className="p-3">{trip.passengerCount}</td>
-                  <td className="p-3">{getStatusLabel(trip.status)}</td>
-                  <td className="p-3">
-                    {trip.duplicateWarning ? "Yes" : "No"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              <tbody>
+                {trips.map((trip) => (
+                  <tr
+                    key={trip.id}
+                    onClick={() => navigate(`/trips/${trip.id}`)}
+                    className="cursor-pointer border-b transition last:border-b-0 hover:bg-gray-50"
+                  >
+                    <td className="p-3 font-medium">{trip.tripNumber}</td>
+                    <td className="p-3">{trip.client.name}</td>
+                    <td className="p-3">
+                      {new Date(trip.pickupDateTime).toLocaleString()}
+                    </td>
+                    <td className="p-3">{trip.pickupLocation}</td>
+                    <td className="p-3">{trip.destination}</td>
+                    <td className="p-3">{trip.passengerCount}</td>
+                    <td className="p-3">
+                      <StatusBadge status={trip.status} />
+                    </td>
+                    <td className="p-3">
+                      {trip.duplicateWarning ? "Yes" : "No"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          <div className="flex items-center justify-between p-4 border-t">
-            <button
+          <div className="flex items-center justify-between border-t p-4">
+            <Button
+              variant="secondary"
               disabled={page <= 1}
               onClick={() => setPage((current) => current - 1)}
-              className="rounded border px-4 py-2 disabled:opacity-50"
             >
               Previous
-            </button>
+            </Button>
 
             <span className="text-sm text-gray-600">
               Page {page} of {totalPages}
             </span>
 
-            <button
+            <Button
+              variant="secondary"
               disabled={page >= totalPages}
               onClick={() => setPage((current) => current + 1)}
-              className="rounded border px-4 py-2 disabled:opacity-50"
             >
               Next
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
+      )}
+
+      {exportMessage && (
+        <Toast
+          message={exportMessage}
+          type="success"
+          onClose={() => setExportMessage("")}
+        />
+      )}
+
+      {exportError && (
+        <Toast
+          message={exportError}
+          type="error"
+          onClose={() => setExportError("")}
+        />
       )}
     </div>
   );

@@ -9,23 +9,14 @@ import {
   getTripById,
   rejectTrip,
   type Trip,
-  type TripStatus,
 } from "../api/tripsApi";
 
-function getStatusLabel(status: TripStatus) {
-  switch (status) {
-    case "PENDING_APPROVAL":
-      return "Pending Approval";
-    case "APPROVED":
-      return "Approved";
-    case "REJECTED":
-      return "Rejected";
-    case "CANCELLED":
-      return "Cancelled";
-    default:
-      return status;
-  }
-}
+import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
+import { LoadingState } from "../components/ui/LoadingState";
+import { StatusBadge } from "../components/ui/Badge";
+import { Toast } from "../components/ui/Toast";
 
 function DetailRow({
   label,
@@ -35,11 +26,16 @@ function DetailRow({
   value: string | number | null | undefined;
 }) {
   return (
-    <div className="border-b py-3">
+    <div className="border-b py-3 last:border-b-0">
       <div className="text-sm text-gray-500">{label}</div>
-      <div className="font-medium">{value || "-"}</div>
+      <div className="mt-1 font-medium text-gray-900">{value || "-"}</div>
     </div>
   );
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "-";
+  return new Date(value).toLocaleString();
 }
 
 export function TripDetailsPage() {
@@ -52,6 +48,11 @@ export function TripDetailsPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
+
   async function loadTrip() {
     if (!id) return;
 
@@ -60,6 +61,7 @@ export function TripDetailsPage() {
       setError("");
 
       const data = await getTripById(id);
+
       setTrip(data);
     } catch {
       setError("Failed to load trip");
@@ -80,9 +82,13 @@ export function TripDetailsPage() {
       setError("");
 
       const updatedTrip = await approveTrip(trip.id);
+
       setTrip(updatedTrip);
+      setToastType("success");
+      setToastMessage("Trip approved successfully");
     } catch {
-      setError("Failed to approve trip");
+      setToastType("error");
+      setToastMessage("Failed to approve trip");
     } finally {
       setActionLoading(false);
     }
@@ -93,16 +99,22 @@ export function TripDetailsPage() {
 
     const reason = window.prompt("Enter rejection reason:");
 
-    if (!reason) return;
+    if (!reason || reason.trim().length < 2) {
+      return;
+    }
 
     try {
       setActionLoading(true);
       setError("");
 
-      const updatedTrip = await rejectTrip(trip.id, reason);
+      const updatedTrip = await rejectTrip(trip.id, reason.trim());
+
       setTrip(updatedTrip);
+      setToastType("success");
+      setToastMessage("Trip rejected successfully");
     } catch {
-      setError("Failed to reject trip");
+      setToastType("error");
+      setToastMessage("Failed to reject trip");
     } finally {
       setActionLoading(false);
     }
@@ -111,114 +123,124 @@ export function TripDetailsPage() {
   async function handleCancel() {
     if (!trip) return;
 
-    const confirmed = window.confirm(
-      "Are you sure you want to cancel this trip?"
-    );
-
-    if (!confirmed) return;
-
     try {
       setActionLoading(true);
       setError("");
 
       const updatedTrip = await cancelTrip(trip.id);
+
       setTrip(updatedTrip);
+      setIsCancelModalOpen(false);
+      setToastType("success");
+      setToastMessage("Trip cancelled successfully");
     } catch {
-      setError("Failed to cancel trip");
+      setToastType("error");
+      setToastMessage("Failed to cancel trip");
     } finally {
       setActionLoading(false);
     }
   }
 
   if (isLoading) {
-    return <div>Loading trip...</div>;
+    return <LoadingState text="Loading trip..." />;
   }
 
   if (error && !trip) {
     return (
-      <div>
-        <div className="rounded bg-red-50 text-red-700 p-4 mb-4">{error}</div>
+      <div className="space-y-4">
+        <div className="rounded-xl bg-red-50 p-4 text-red-700">{error}</div>
 
-        <button
-          onClick={() => navigate("/trips")}
-          className="rounded border px-4 py-2"
-        >
+        <Button variant="secondary" onClick={() => navigate("/trips")}>
           Back to Trips
-        </button>
+        </Button>
       </div>
     );
   }
 
   if (!trip) {
-    return <div>Trip not found.</div>;
+    return (
+      <EmptyFallback onBack={() => navigate("/trips")} />
+    );
   }
 
   const isCompanyAdmin = user?.role === "COMPANY_ADMIN";
+
   const canApproveOrReject =
     isCompanyAdmin && trip.status === "PENDING_APPROVAL";
+
   const canCancel = trip.status !== "CANCELLED";
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <Link to="/trips" className="text-sm text-blue-600">
+          <Link to="/trips" className="text-sm font-medium text-blue-600">
             ← Back to Trips
           </Link>
 
-          <h1 className="text-2xl font-bold mt-2">Trip #{trip.tripNumber}</h1>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold">Trip #{trip.tripNumber}</h1>
+            <StatusBadge status={trip.status} />
+          </div>
 
-          <p className="text-gray-500">
-            {trip.client.name} · {getStatusLabel(trip.status)}
+          <p className="mt-2 text-gray-500">
+            {trip.client.name} · {formatDate(trip.pickupDateTime)}
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {canApproveOrReject && (
             <>
-              <button
+              <Button
+                variant="success"
                 disabled={actionLoading}
                 onClick={handleApprove}
-                className="rounded bg-green-700 text-white px-4 py-2 disabled:opacity-50"
               >
-                Approve
-              </button>
+                {actionLoading ? "Working..." : "Approve"}
+              </Button>
 
-              <button
+              <Button
+                variant="danger"
                 disabled={actionLoading}
                 onClick={handleReject}
-                className="rounded bg-red-700 text-white px-4 py-2 disabled:opacity-50"
               >
                 Reject
-              </button>
+              </Button>
             </>
           )}
 
           {canCancel && (
-            <button
+            <Button
+              variant="secondary"
               disabled={actionLoading}
-              onClick={handleCancel}
-              className="rounded bg-gray-900 text-white px-4 py-2 disabled:opacity-50"
+              onClick={() => setIsCancelModalOpen(true)}
             >
               Cancel
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="rounded bg-red-50 text-red-700 p-4 mb-4">{error}</div>
+        <div className="rounded-xl bg-red-50 p-4 text-red-700">{error}</div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <section className="rounded bg-white border p-5">
-          <h2 className="text-lg font-semibold mb-4">Trip Details</h2>
+      {trip.duplicateWarning && (
+        <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-yellow-800">
+          This trip may be a duplicate. Please review the date, client, and
+          destination.
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card className="p-5">
+          <h2 className="mb-4 text-lg font-semibold">Trip Details</h2>
 
           <DetailRow label="Client" value={trip.client.name} />
-          <DetailRow label="Status" value={getStatusLabel(trip.status)} />
+          <DetailRow label="Status" value={trip.status} />
           <DetailRow
             label="Pickup Date & Time"
-            value={new Date(trip.pickupDateTime).toLocaleString()}
+            value={formatDate(trip.pickupDateTime)}
           />
           <DetailRow label="Pickup Location" value={trip.pickupLocation} />
           <DetailRow label="Destination" value={trip.destination} />
@@ -228,52 +250,78 @@ export function TripDetailsPage() {
             label="Duplicate Warning"
             value={trip.duplicateWarning ? "Yes" : "No"}
           />
-          <DetailRow label="Exported" value={trip.isExported ? "Yes" : "No"} />
+          <DetailRow
+            label="Exported"
+            value={trip.isExported ? "Yes" : "No"}
+          />
           <DetailRow
             label="Exported At"
-            value={
-              trip.exportedAt ? new Date(trip.exportedAt).toLocaleString() : "-"
-            }
+            value={formatDate(trip.exportedAt)}
           />
-        </section>
+        </Card>
 
-        <section className="rounded bg-white border p-5">
-          <h2 className="text-lg font-semibold mb-4">Workflow</h2>
+        <Card className="p-5">
+          <h2 className="mb-4 text-lg font-semibold">Workflow</h2>
 
-          <DetailRow label="Created By" value={trip.createdByUser?.fullName} />
           <DetailRow
-            label="Approved At"
-            value={
-              trip.approvedAt
-                ? new Date(trip.approvedAt).toLocaleString()
-                : "-"
-            }
+            label="Created By"
+            value={trip.createdByUser?.fullName}
           />
-          <DetailRow label="Approved By" value={trip.approvedByUser?.fullName} />
+          <DetailRow label="Approved At" value={formatDate(trip.approvedAt)} />
           <DetailRow
-            label="Rejected At"
-            value={
-              trip.rejectedAt
-                ? new Date(trip.rejectedAt).toLocaleString()
-                : "-"
-            }
+            label="Approved By"
+            value={trip.approvedByUser?.fullName}
           />
-          <DetailRow label="Rejected By" value={trip.rejectedByUser?.fullName} />
+          <DetailRow label="Rejected At" value={formatDate(trip.rejectedAt)} />
+          <DetailRow
+            label="Rejected By"
+            value={trip.rejectedByUser?.fullName}
+          />
           <DetailRow label="Rejection Reason" value={trip.rejectionReason} />
           <DetailRow
             label="Cancelled At"
-            value={
-              trip.cancelledAt
-                ? new Date(trip.cancelledAt).toLocaleString()
-                : "-"
-            }
+            value={formatDate(trip.cancelledAt)}
           />
           <DetailRow
             label="Cancelled By"
             value={trip.cancelledByUser?.fullName}
           />
-        </section>
+        </Card>
       </div>
+
+      <ConfirmModal
+        isOpen={isCancelModalOpen}
+        title="Cancel trip"
+        description="Are you sure you want to cancel this trip? This will change the trip status to cancelled."
+        confirmLabel={actionLoading ? "Cancelling..." : "Cancel Trip"}
+        cancelLabel="Keep Trip"
+        variant="danger"
+        onConfirm={handleCancel}
+        onCancel={() => setIsCancelModalOpen(false)}
+      />
+
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setToastMessage("")}
+        />
+      )}
     </div>
+  );
+}
+
+function EmptyFallback({ onBack }: { onBack: () => void }) {
+  return (
+    <Card className="p-6">
+      <h2 className="text-lg font-semibold">Trip not found</h2>
+      <p className="mt-2 text-gray-500">
+        The trip does not exist or you do not have access to it.
+      </p>
+
+      <Button variant="secondary" className="mt-4" onClick={onBack}>
+        Back to Trips
+      </Button>
+    </Card>
   );
 }
