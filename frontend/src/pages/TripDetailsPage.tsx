@@ -17,6 +17,8 @@ import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { LoadingState } from "../components/ui/LoadingState";
 import { StatusBadge } from "../components/ui/Badge";
 import { Toast } from "../components/ui/Toast";
+import { PageHeader } from "../components/ui/PageHeader";
+import { RejectTripModal } from "../components/ui/RejectTripModal";
 
 function DetailRow({
   label,
@@ -49,6 +51,7 @@ export function TripDetailsPage() {
   const [error, setError] = useState("");
 
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
 
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
@@ -94,22 +97,17 @@ export function TripDetailsPage() {
     }
   }
 
-  async function handleReject() {
+  async function handleReject(reason: string) {
     if (!trip) return;
-
-    const reason = window.prompt("Enter rejection reason:");
-
-    if (!reason || reason.trim().length < 2) {
-      return;
-    }
 
     try {
       setActionLoading(true);
       setError("");
 
-      const updatedTrip = await rejectTrip(trip.id, reason.trim());
+      const updatedTrip = await rejectTrip(trip.id, reason);
 
       setTrip(updatedTrip);
+      setIsRejectModalOpen(false);
       setToastType("success");
       setToastMessage("Trip rejected successfully");
     } catch {
@@ -159,76 +157,71 @@ export function TripDetailsPage() {
 
   if (!trip) {
     return (
-      <EmptyFallback onBack={() => navigate("/trips")} />
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold">Trip not found</h2>
+        <p className="mt-2 text-gray-500">
+          The trip does not exist or you do not have access to it.
+        </p>
+
+        <Button variant="secondary" className="mt-4" onClick={() => navigate("/trips")}>
+          Back to Trips
+        </Button>
+      </Card>
     );
   }
 
   const isCompanyAdmin = user?.role === "COMPANY_ADMIN";
-
-  const canApproveOrReject =
-    isCompanyAdmin && trip.status === "PENDING_APPROVAL";
-
+  const canApproveOrReject = isCompanyAdmin && trip.status === "PENDING_APPROVAL";
   const canCancel = trip.status !== "CANCELLED";
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <Link to="/trips" className="text-sm font-medium text-blue-600">
-            ← Back to Trips
-          </Link>
+      <PageHeader
+        title={`Trip #${trip.tripNumber}`}
+        description={`${trip.client.name} · ${formatDate(trip.pickupDateTime)}`}
+        actions={
+          <>
+            {canApproveOrReject && (
+              <>
+                <Button variant="success" disabled={actionLoading} onClick={handleApprove}>
+                  {actionLoading ? "Working..." : "Approve"}
+                </Button>
 
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-bold">Trip #{trip.tripNumber}</h1>
-            <StatusBadge status={trip.status} />
-          </div>
+                <Button
+                  variant="danger"
+                  disabled={actionLoading}
+                  onClick={() => setIsRejectModalOpen(true)}
+                >
+                  Reject
+                </Button>
+              </>
+            )}
 
-          <p className="mt-2 text-gray-500">
-            {trip.client.name} · {formatDate(trip.pickupDateTime)}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {canApproveOrReject && (
-            <>
+            {canCancel && (
               <Button
-                variant="success"
+                variant="secondary"
                 disabled={actionLoading}
-                onClick={handleApprove}
+                onClick={() => setIsCancelModalOpen(true)}
               >
-                {actionLoading ? "Working..." : "Approve"}
+                Cancel
               </Button>
+            )}
+          </>
+        }
+      />
 
-              <Button
-                variant="danger"
-                disabled={actionLoading}
-                onClick={handleReject}
-              >
-                Reject
-              </Button>
-            </>
-          )}
-
-          {canCancel && (
-            <Button
-              variant="secondary"
-              disabled={actionLoading}
-              onClick={() => setIsCancelModalOpen(true)}
-            >
-              Cancel
-            </Button>
-          )}
+      <div>
+        <Link to="/trips" className="text-sm font-medium text-blue-600">
+          ← Back to Trips
+        </Link>
+        <div className="mt-3">
+          <StatusBadge status={trip.status} />
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-xl bg-red-50 p-4 text-red-700">{error}</div>
-      )}
-
       {trip.duplicateWarning && (
         <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-yellow-800">
-          This trip may be a duplicate. Please review the date, client, and
-          destination.
+          This trip may be a duplicate. Please review the date, client, and destination.
         </div>
       )}
 
@@ -238,54 +231,27 @@ export function TripDetailsPage() {
 
           <DetailRow label="Client" value={trip.client.name} />
           <DetailRow label="Status" value={trip.status} />
-          <DetailRow
-            label="Pickup Date & Time"
-            value={formatDate(trip.pickupDateTime)}
-          />
+          <DetailRow label="Pickup Date & Time" value={formatDate(trip.pickupDateTime)} />
           <DetailRow label="Pickup Location" value={trip.pickupLocation} />
           <DetailRow label="Destination" value={trip.destination} />
           <DetailRow label="Passengers" value={trip.passengerCount} />
           <DetailRow label="Notes" value={trip.notes} />
-          <DetailRow
-            label="Duplicate Warning"
-            value={trip.duplicateWarning ? "Yes" : "No"}
-          />
-          <DetailRow
-            label="Exported"
-            value={trip.isExported ? "Yes" : "No"}
-          />
-          <DetailRow
-            label="Exported At"
-            value={formatDate(trip.exportedAt)}
-          />
+          <DetailRow label="Duplicate Warning" value={trip.duplicateWarning ? "Yes" : "No"} />
+          <DetailRow label="Exported" value={trip.isExported ? "Yes" : "No"} />
+          <DetailRow label="Exported At" value={formatDate(trip.exportedAt)} />
         </Card>
 
         <Card className="p-5">
           <h2 className="mb-4 text-lg font-semibold">Workflow</h2>
 
-          <DetailRow
-            label="Created By"
-            value={trip.createdByUser?.fullName}
-          />
+          <DetailRow label="Created By" value={trip.createdByUser?.fullName} />
           <DetailRow label="Approved At" value={formatDate(trip.approvedAt)} />
-          <DetailRow
-            label="Approved By"
-            value={trip.approvedByUser?.fullName}
-          />
+          <DetailRow label="Approved By" value={trip.approvedByUser?.fullName} />
           <DetailRow label="Rejected At" value={formatDate(trip.rejectedAt)} />
-          <DetailRow
-            label="Rejected By"
-            value={trip.rejectedByUser?.fullName}
-          />
+          <DetailRow label="Rejected By" value={trip.rejectedByUser?.fullName} />
           <DetailRow label="Rejection Reason" value={trip.rejectionReason} />
-          <DetailRow
-            label="Cancelled At"
-            value={formatDate(trip.cancelledAt)}
-          />
-          <DetailRow
-            label="Cancelled By"
-            value={trip.cancelledByUser?.fullName}
-          />
+          <DetailRow label="Cancelled At" value={formatDate(trip.cancelledAt)} />
+          <DetailRow label="Cancelled By" value={trip.cancelledByUser?.fullName} />
         </Card>
       </div>
 
@@ -300,6 +266,13 @@ export function TripDetailsPage() {
         onCancel={() => setIsCancelModalOpen(false)}
       />
 
+      <RejectTripModal
+        isOpen={isRejectModalOpen}
+        isSubmitting={actionLoading}
+        onCancel={() => setIsRejectModalOpen(false)}
+        onConfirm={handleReject}
+      />
+
       {toastMessage && (
         <Toast
           message={toastMessage}
@@ -308,20 +281,5 @@ export function TripDetailsPage() {
         />
       )}
     </div>
-  );
-}
-
-function EmptyFallback({ onBack }: { onBack: () => void }) {
-  return (
-    <Card className="p-6">
-      <h2 className="text-lg font-semibold">Trip not found</h2>
-      <p className="mt-2 text-gray-500">
-        The trip does not exist or you do not have access to it.
-      </p>
-
-      <Button variant="secondary" className="mt-4" onClick={onBack}>
-        Back to Trips
-      </Button>
-    </Card>
   );
 }
