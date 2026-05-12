@@ -34,6 +34,19 @@ export function Sidebar() {
           Trips
         </NavLink>
 
+        {user?.role === "CLIENT_USER" && (
+          <NavLink
+            to="/trips/new"
+            className={({ isActive }) =>
+              `block rounded px-3 py-2 ${
+                isActive ? "bg-gray-700" : "hover:bg-gray-800"
+              }`
+            }
+          >
+            Create Trip
+          </NavLink>
+        )}
+
         <NavLink
           to={user?.role === "COMPANY_ADMIN" ? "/company" : "/client"}
           className={({ isActive }) =>

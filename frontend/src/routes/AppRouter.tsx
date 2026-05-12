@@ -7,8 +7,10 @@ import { ClientHomePage } from "../pages/ClientHomePage";
 import { DashboardPage } from "../pages/DashboardPage";
 import { TripsPage } from "../pages/TripsPage";
 import { TripDetailsPage } from "../pages/TripDetailsPage";
+import { CreateTripPage } from "../pages/CreateTripPage";
 
 import { ProtectedRoute } from "./ProtectedRoute";
+import { RoleRoute } from "./RoleRoute";
 import { AppLayout } from "../layouts/AppLayout";
 
 export function AppRouter() {
@@ -23,6 +25,11 @@ export function AppRouter() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/trips" element={<TripsPage />} />
             <Route path="/trips/:id" element={<TripDetailsPage />} />
+
+            <Route element={<RoleRoute allowedRoles={["CLIENT_USER"]} />}>
+              <Route path="/trips/new" element={<CreateTripPage />} />
+            </Route>
+
             <Route path="/company" element={<CompanyHomePage />} />
             <Route path="/client" element={<ClientHomePage />} />
           </Route>

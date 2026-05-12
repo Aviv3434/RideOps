@@ -110,3 +110,22 @@ export async function cancelTrip(tripId: string): Promise<Trip> {
 
   return response.data;
 }
+
+export type CreateTripInput = {
+  pickupDateTime: string;
+  pickupLocation: string;
+  destination: string;
+  passengerCount: number;
+  notes?: string;
+};
+
+export async function createTrip(
+  data: CreateTripInput
+): Promise<Trip> {
+  const response = await apiClient.post<Trip>(
+    "/trips",
+    data
+  );
+
+  return response.data;
+}
