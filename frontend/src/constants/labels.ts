@@ -1,3 +1,5 @@
+import type { TripStatus } from "../api/tripsApi";
+
 export const labels = {
   appName: "RideOps",
 
@@ -63,4 +65,58 @@ export const labels = {
   next: "הבא",
   page: "עמוד",
   of: "מתוך",
+
+  tripDetails: "פרטי נסיעה",
+  workflow: "תהליך טיפול",
+  pickupDateTime: "תאריך ושעת איסוף",
+  pickupLocation: "נקודת איסוף",
+  notes: "הערות",
+  duplicateWarning: "חשד לכפילות",
+  exported: "יוצאה לאקסל",
+  exportedAt: "תאריך ייצוא",
+  createdBy: "נוצרה על ידי",
+  approvedAt: "אושרה בתאריך",
+  approvedBy: "אושרה על ידי",
+  rejectedAt: "נדחתה בתאריך",
+  rejectedBy: "נדחתה על ידי",
+  rejectionReason: "סיבת דחייה",
+  cancelledAt: "בוטלה בתאריך",
+  cancelledBy: "בוטלה על ידי",
+  backToTrips: "חזרה לנסיעות",
+  tripNotFound: "הנסיעה לא נמצאה",
+  tripNotFoundDescription: "הנסיעה לא קיימת או שאין לך הרשאה לצפות בה.",
+  duplicateWarningMessage:
+    "ייתכן שהנסיעה הזו כפולה. מומלץ לבדוק את התאריך, הלקוח והיעד.",
+
+  approveTrip: "אשר נסיעה",
+  rejectTrip: "דחה נסיעה",
+  cancelTrip: "בטל נסיעה",
+  approving: "מאשר...",
+  rejecting: "דוחה...",
+  cancelling: "מבטל...",
+  keepTrip: "השאר נסיעה",
+
+  approvedSuccess: "הנסיעה אושרה בהצלחה",
+  approvedError: "לא הצלחנו לאשר את הנסיעה",
+  rejectedSuccess: "הנסיעה נדחתה בהצלחה",
+  rejectedError: "לא הצלחנו לדחות את הנסיעה",
+  cancelledSuccess: "הנסיעה בוטלה בהצלחה",
+  cancelledError: "לא הצלחנו לבטל את הנסיעה",
+  loadTripError: "לא הצלחנו לטעון את פרטי הנסיעה",
+
+  cancelTripTitle: "ביטול נסיעה",
+  cancelTripDescription:
+    "האם אתה בטוח שברצונך לבטל את הנסיעה? הסטטוס ישתנה לבוטלה.",
+  rejectTripTitle: "דחיית נסיעה",
+  rejectTripDescription:
+    "יש להזין סיבת דחייה. הלקוח יוכל לראות את הסיבה.",
+  rejectionReasonPlaceholder: "סיבת הדחייה...",
+  rejectionReasonValidation: "סיבת הדחייה חייבת להכיל לפחות 2 תווים.",
+};
+
+export const tripStatusLabels: Record<TripStatus, string> = {
+  PENDING_APPROVAL: "ממתינה לאישור",
+  APPROVED: "מאושרת",
+  REJECTED: "נדחתה",
+  CANCELLED: "בוטלה",
 };

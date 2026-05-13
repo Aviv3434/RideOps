@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { useAuth } from "../auth/AuthContext";
+import { labels, tripStatusLabels } from "../constants/labels";
 
 import {
   approveTrip,
@@ -17,7 +18,6 @@ import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { LoadingState } from "../components/ui/LoadingState";
 import { StatusBadge } from "../components/ui/Badge";
 import { Toast } from "../components/ui/Toast";
-import { PageHeader } from "../components/ui/PageHeader";
 import { RejectTripModal } from "../components/ui/RejectTripModal";
 
 function DetailRow({
@@ -36,8 +36,11 @@ function DetailRow({
 }
 
 function formatDate(value?: string | null) {
-  if (!value) return "-";
-  return new Date(value).toLocaleString();
+  if (!value) {
+    return "-";
+  }
+
+  return new Date(value).toLocaleString("he-IL");
 }
 
 export function TripDetailsPage() {
@@ -57,7 +60,9 @@ export function TripDetailsPage() {
   const [toastType, setToastType] = useState<"success" | "error">("success");
 
   async function loadTrip() {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -67,7 +72,7 @@ export function TripDetailsPage() {
 
       setTrip(data);
     } catch {
-      setError("Failed to load trip");
+      setError(labels.loadTripError);
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +83,9 @@ export function TripDetailsPage() {
   }, [id]);
 
   async function handleApprove() {
-    if (!trip) return;
+    if (!trip) {
+      return;
+    }
 
     try {
       setActionLoading(true);
@@ -88,17 +95,19 @@ export function TripDetailsPage() {
 
       setTrip(updatedTrip);
       setToastType("success");
-      setToastMessage("Trip approved successfully");
+      setToastMessage(labels.approvedSuccess);
     } catch {
       setToastType("error");
-      setToastMessage("Failed to approve trip");
+      setToastMessage(labels.approvedError);
     } finally {
       setActionLoading(false);
     }
   }
 
   async function handleReject(reason: string) {
-    if (!trip) return;
+    if (!trip) {
+      return;
+    }
 
     try {
       setActionLoading(true);
@@ -109,17 +118,19 @@ export function TripDetailsPage() {
       setTrip(updatedTrip);
       setIsRejectModalOpen(false);
       setToastType("success");
-      setToastMessage("Trip rejected successfully");
+      setToastMessage(labels.rejectedSuccess);
     } catch {
       setToastType("error");
-      setToastMessage("Failed to reject trip");
+      setToastMessage(labels.rejectedError);
     } finally {
       setActionLoading(false);
     }
   }
 
   async function handleCancel() {
-    if (!trip) return;
+    if (!trip) {
+      return;
+    }
 
     try {
       setActionLoading(true);
@@ -130,26 +141,26 @@ export function TripDetailsPage() {
       setTrip(updatedTrip);
       setIsCancelModalOpen(false);
       setToastType("success");
-      setToastMessage("Trip cancelled successfully");
+      setToastMessage(labels.cancelledSuccess);
     } catch {
       setToastType("error");
-      setToastMessage("Failed to cancel trip");
+      setToastMessage(labels.cancelledError);
     } finally {
       setActionLoading(false);
     }
   }
 
   if (isLoading) {
-    return <LoadingState text="Loading trip..." />;
+    return <LoadingState text="טוען פרטי נסיעה..." />;
   }
 
   if (error && !trip) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 text-right">
         <div className="rounded-xl bg-red-50 p-4 text-red-700">{error}</div>
 
         <Button variant="secondary" onClick={() => navigate("/trips")}>
-          Back to Trips
+          {labels.backToTrips}
         </Button>
       </div>
     );
@@ -157,110 +168,165 @@ export function TripDetailsPage() {
 
   if (!trip) {
     return (
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold">Trip not found</h2>
+      <Card className="p-6 text-right">
+        <h2 className="text-lg font-semibold">{labels.tripNotFound}</h2>
+
         <p className="mt-2 text-gray-500">
-          The trip does not exist or you do not have access to it.
+          {labels.tripNotFoundDescription}
         </p>
 
-        <Button variant="secondary" className="mt-4" onClick={() => navigate("/trips")}>
-          Back to Trips
+        <Button
+          variant="secondary"
+          className="mt-4"
+          onClick={() => navigate("/trips")}
+        >
+          {labels.backToTrips}
         </Button>
       </Card>
     );
   }
 
   const isCompanyAdmin = user?.role === "COMPANY_ADMIN";
-  const canApproveOrReject = isCompanyAdmin && trip.status === "PENDING_APPROVAL";
+  const canApproveOrReject =
+    isCompanyAdmin && trip.status === "PENDING_APPROVAL";
   const canCancel = trip.status !== "CANCELLED";
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={`Trip #${trip.tripNumber}`}
-        description={`${trip.client.name} · ${formatDate(trip.pickupDateTime)}`}
-        actions={
-          <>
-            {canApproveOrReject && (
-              <>
-                <Button variant="success" disabled={actionLoading} onClick={handleApprove}>
-                  {actionLoading ? "Working..." : "Approve"}
-                </Button>
+    <div className="space-y-6 text-right" dir="rtl">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <Link to="/trips" className="text-sm font-medium text-blue-600">
+            → {labels.backToTrips}
+          </Link>
 
-                <Button
-                  variant="danger"
-                  disabled={actionLoading}
-                  onClick={() => setIsRejectModalOpen(true)}
-                >
-                  Reject
-                </Button>
-              </>
-            )}
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold">נסיעה #{trip.tripNumber}</h1>
+            <StatusBadge status={trip.status} />
+          </div>
 
-            {canCancel && (
+          <p className="mt-2 text-gray-500">
+            {trip.client.name} · {formatDate(trip.pickupDateTime)}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {canApproveOrReject && (
+            <>
               <Button
-                variant="secondary"
+                variant="success"
                 disabled={actionLoading}
-                onClick={() => setIsCancelModalOpen(true)}
+                onClick={handleApprove}
               >
-                Cancel
+                {actionLoading ? labels.approving : labels.approveTrip}
               </Button>
-            )}
-          </>
-        }
-      />
 
-      <div>
-        <Link to="/trips" className="text-sm font-medium text-blue-600">
-          ← Back to Trips
-        </Link>
-        <div className="mt-3">
-          <StatusBadge status={trip.status} />
+              <Button
+                variant="danger"
+                disabled={actionLoading}
+                onClick={() => setIsRejectModalOpen(true)}
+              >
+                {labels.rejectTrip}
+              </Button>
+            </>
+          )}
+
+          {canCancel && (
+            <Button
+              variant="secondary"
+              disabled={actionLoading}
+              onClick={() => setIsCancelModalOpen(true)}
+            >
+              {labels.cancelTrip}
+            </Button>
+          )}
         </div>
       </div>
 
+      {error && (
+        <div className="rounded-xl bg-red-50 p-4 text-red-700">{error}</div>
+      )}
+
       {trip.duplicateWarning && (
         <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-yellow-800">
-          This trip may be a duplicate. Please review the date, client, and destination.
+          {labels.duplicateWarningMessage}
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="p-5">
-          <h2 className="mb-4 text-lg font-semibold">Trip Details</h2>
+          <h2 className="mb-4 text-lg font-semibold">{labels.tripDetails}</h2>
 
-          <DetailRow label="Client" value={trip.client.name} />
-          <DetailRow label="Status" value={trip.status} />
-          <DetailRow label="Pickup Date & Time" value={formatDate(trip.pickupDateTime)} />
-          <DetailRow label="Pickup Location" value={trip.pickupLocation} />
-          <DetailRow label="Destination" value={trip.destination} />
-          <DetailRow label="Passengers" value={trip.passengerCount} />
-          <DetailRow label="Notes" value={trip.notes} />
-          <DetailRow label="Duplicate Warning" value={trip.duplicateWarning ? "Yes" : "No"} />
-          <DetailRow label="Exported" value={trip.isExported ? "Yes" : "No"} />
-          <DetailRow label="Exported At" value={formatDate(trip.exportedAt)} />
+          <DetailRow label={labels.client} value={trip.client.name} />
+          <DetailRow
+            label={labels.status}
+            value={tripStatusLabels[trip.status]}
+          />
+          <DetailRow
+            label={labels.pickupDateTime}
+            value={formatDate(trip.pickupDateTime)}
+          />
+          <DetailRow
+            label={labels.pickupLocation}
+            value={trip.pickupLocation}
+          />
+          <DetailRow label={labels.destination} value={trip.destination} />
+          <DetailRow label={labels.passengers} value={trip.passengerCount} />
+          <DetailRow label={labels.notes} value={trip.notes} />
+          <DetailRow
+            label={labels.duplicateWarning}
+            value={trip.duplicateWarning ? labels.yes : labels.no}
+          />
+          <DetailRow
+            label={labels.exported}
+            value={trip.isExported ? labels.yes : labels.no}
+          />
+          <DetailRow label={labels.exportedAt} value={formatDate(trip.exportedAt)} />
         </Card>
 
         <Card className="p-5">
-          <h2 className="mb-4 text-lg font-semibold">Workflow</h2>
+          <h2 className="mb-4 text-lg font-semibold">{labels.workflow}</h2>
 
-          <DetailRow label="Created By" value={trip.createdByUser?.fullName} />
-          <DetailRow label="Approved At" value={formatDate(trip.approvedAt)} />
-          <DetailRow label="Approved By" value={trip.approvedByUser?.fullName} />
-          <DetailRow label="Rejected At" value={formatDate(trip.rejectedAt)} />
-          <DetailRow label="Rejected By" value={trip.rejectedByUser?.fullName} />
-          <DetailRow label="Rejection Reason" value={trip.rejectionReason} />
-          <DetailRow label="Cancelled At" value={formatDate(trip.cancelledAt)} />
-          <DetailRow label="Cancelled By" value={trip.cancelledByUser?.fullName} />
+          <DetailRow
+            label={labels.createdBy}
+            value={trip.createdByUser?.fullName}
+          />
+          <DetailRow
+            label={labels.approvedAt}
+            value={formatDate(trip.approvedAt)}
+          />
+          <DetailRow
+            label={labels.approvedBy}
+            value={trip.approvedByUser?.fullName}
+          />
+          <DetailRow
+            label={labels.rejectedAt}
+            value={formatDate(trip.rejectedAt)}
+          />
+          <DetailRow
+            label={labels.rejectedBy}
+            value={trip.rejectedByUser?.fullName}
+          />
+          <DetailRow
+            label={labels.rejectionReason}
+            value={trip.rejectionReason}
+          />
+          <DetailRow
+            label={labels.cancelledAt}
+            value={formatDate(trip.cancelledAt)}
+          />
+          <DetailRow
+            label={labels.cancelledBy}
+            value={trip.cancelledByUser?.fullName}
+          />
         </Card>
       </div>
 
       <ConfirmModal
         isOpen={isCancelModalOpen}
-        title="Cancel trip"
-        description="Are you sure you want to cancel this trip? This will change the trip status to cancelled."
-        confirmLabel={actionLoading ? "Cancelling..." : "Cancel Trip"}
-        cancelLabel="Keep Trip"
+        title={labels.cancelTripTitle}
+        description={labels.cancelTripDescription}
+        confirmLabel={actionLoading ? labels.cancelling : labels.cancelTrip}
+        cancelLabel={labels.keepTrip}
         variant="danger"
         onConfirm={handleCancel}
         onCancel={() => setIsCancelModalOpen(false)}
