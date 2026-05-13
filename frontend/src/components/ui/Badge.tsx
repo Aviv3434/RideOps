@@ -12,10 +12,10 @@ const statusClasses: Record<TripStatus, string> = {
 };
 
 const statusLabels: Record<TripStatus, string> = {
-  PENDING_APPROVAL: "Pending",
-  APPROVED: "Approved",
-  REJECTED: "Rejected",
-  CANCELLED: "Cancelled",
+  PENDING_APPROVAL: "ממתינה לאישור",
+  APPROVED: "מאושרת",
+  REJECTED: "נדחתה",
+  CANCELLED: "בוטלה",
 };
 
 export function StatusBadge({ status }: BadgeProps) {

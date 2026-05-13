@@ -7,6 +7,7 @@ import {
 
 import { Card } from "../components/ui/Card";
 import { LoadingState } from "../components/ui/LoadingState";
+import { labels } from "../constants/labels";
 
 function StatCard({
   title,
@@ -41,7 +42,7 @@ export function DashboardPage() {
 
         setStats(data);
       } catch {
-        setError("Failed to load dashboard stats");
+        setError("טעינת נתוני לוח הבקרה נכשלה");
       } finally {
         setIsLoading(false);
       }
@@ -51,7 +52,7 @@ export function DashboardPage() {
   }, []);
 
   if (isLoading) {
-    return <LoadingState text="Loading dashboard..." />;
+    return <LoadingState text="טוען לוח בקרה..." />;
   }
 
   if (error) {
@@ -63,57 +64,57 @@ export function DashboardPage() {
   }
 
   if (!stats) {
-    return <div>No dashboard data found.</div>;
+    return <div>לא נמצאו נתונים להצגה.</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-right">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-gray-500">Overview of RideOps activity</p>
+        <h1 className="text-2xl font-bold">{labels.dashboard}</h1>
+        <p className="text-gray-500">{labels.overview}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="Pending Approval"
+          title={labels.pendingApproval}
           value={stats.pendingApprovalCount}
-          description="Trips waiting for company approval"
+          description={labels.pendingDescription}
         />
 
         <StatCard
-          title="Approved Trips"
+          title={labels.approvedTrips}
           value={stats.approvedTripsCount}
-          description="Trips approved by the company"
+          description={labels.approvedDescription}
         />
 
         <StatCard
-          title="Rejected Trips"
+          title={labels.rejectedTrips}
           value={stats.rejectedTripsCount}
-          description="Trips rejected by the company"
+          description={labels.rejectedDescription}
         />
 
         <StatCard
-          title="Cancelled Trips"
+          title={labels.cancelledTrips}
           value={stats.cancelledTripsCount}
-          description="Trips cancelled by users"
+          description={labels.cancelledDescription}
         />
 
         <StatCard
-          title="Trips Today"
+          title={labels.tripsToday}
           value={stats.tripsToday}
-          description="Trips scheduled for today"
+          description={labels.todayDescription}
         />
 
         <StatCard
-          title="Trips This Month"
+          title={labels.tripsThisMonth}
           value={stats.tripsThisMonth}
-          description="Trips scheduled this month"
+          description={labels.monthDescription}
         />
 
         <StatCard
-          title="Active Clients"
+          title={labels.activeClients}
           value={stats.activeClientsCount}
-          description="Active clients in scope"
+          description={labels.clientsDescription}
         />
       </div>
     </div>
