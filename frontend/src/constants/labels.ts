@@ -112,6 +112,23 @@ export const labels = {
     "יש להזין סיבת דחייה. הלקוח יוכל לראות את הסיבה.",
   rejectionReasonPlaceholder: "סיבת הדחייה...",
   rejectionReasonValidation: "סיבת הדחייה חייבת להכיל לפחות 2 תווים.",
+
+  createTripTitle: "יצירת הזמנת נסיעה",
+  createTripDescription: "שליחת בקשת נסיעה חדשה לאישור חברת ההסעות",
+  pickupLocationPlaceholder: "לדוגמה: תיכון הרצל",
+  destinationPlaceholder: "לדוגמה: מוזיאון תל אביב",
+  passengerCount: "כמות נוסעים",
+  notesPlaceholder: "הערות נוספות, דרישות מיוחדות וכו׳",
+  createButton: "צור הזמנה",
+  creatingButton: "יוצר הזמנה...",
+  cancelButton: "ביטול",
+  createTripSuccess: "ההזמנה נוצרה בהצלחה",
+  createTripError: "לא הצלחנו ליצור את ההזמנה",
+
+  pickupDateTimeRequired: "יש לבחור תאריך ושעת איסוף",
+  pickupLocationRequired: "יש להזין נקודת איסוף",
+  destinationRequired: "יש להזין יעד",
+  passengerCountRequired: "כמות הנוסעים חייבת להיות מספר חיובי",
 };
 
 export const tripStatusLabels: Record<TripStatus, string> = {
