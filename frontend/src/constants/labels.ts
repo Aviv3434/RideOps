@@ -1,6 +1,7 @@
 import type { TripStatus } from "../api/tripsApi";
 
 export const labels = {
+  appDescription: "מערכת לניהול הזמנות נסיעה",
   appName: "RideOps",
 
   dashboard: "לוח בקרה",
@@ -129,6 +130,15 @@ export const labels = {
   pickupLocationRequired: "יש להזין נקודת איסוף",
   destinationRequired: "יש להזין יעד",
   passengerCountRequired: "כמות הנוסעים חייבת להיות מספר חיובי",
+  loginTitle: "התחברות למערכת",
+  loginSubtitle: "התחבר כדי לנהל הזמנות נסיעה",
+  email: "אימייל",
+  emailPlaceholder: "name@example.com",
+  password: "סיסמה",
+  passwordPlaceholder: "הקלד סיסמה",
+  loginSubmit: "התחברות",
+  loginSubmitting: "מתחבר...",
+  loginError: "האימייל או הסיסמה אינם נכונים",
 };
 
 export const tripStatusLabels: Record<TripStatus, string> = {
