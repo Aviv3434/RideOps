@@ -139,6 +139,17 @@ export const labels = {
   loginSubmit: "התחברות",
   loginSubmitting: "מתחבר...",
   loginError: "האימייל או הסיסמה אינם נכונים",
+
+  companyAreaTitle: "אזור ניהול חברה",
+  companyAreaDescription: "ניהול כללי של נסיעות, לקוחות ותפעול החברה",
+  clientAreaTitle: "אזור לקוח",
+  clientAreaDescription: "צפייה וניהול הזמנות הנסיעה של הלקוח",
+  welcome: "שלום",
+  role: "תפקיד",
+  userEmail: "אימייל",
+  goToDashboard: "מעבר ללוח הבקרה",
+  goToTrips: "מעבר לנסיעות",
+  newTripRequest: "בקשת נסיעה חדשה",
 };
 
 export const tripStatusLabels: Record<TripStatus, string> = {
