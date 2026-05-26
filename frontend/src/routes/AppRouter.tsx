@@ -8,6 +8,7 @@ import { DashboardPage } from "../pages/DashboardPage";
 import { TripsPage } from "../pages/TripsPage";
 import { TripDetailsPage } from "../pages/TripDetailsPage";
 import { CreateTripPage } from "../pages/CreateTripPage";
+import { ClientsPage } from "../pages/ClientsPage";
 
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RoleRoute } from "./RoleRoute";
@@ -28,6 +29,10 @@ export function AppRouter() {
 
             <Route element={<RoleRoute allowedRoles={["CLIENT_USER"]} />}>
               <Route path="/trips/new" element={<CreateTripPage />} />
+            </Route>
+
+            <Route element={<RoleRoute allowedRoles={["COMPANY_ADMIN"]} />}>
+              <Route path="/clients" element={<ClientsPage />} />
             </Route>
 
             <Route path="/company" element={<CompanyHomePage />} />
