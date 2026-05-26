@@ -39,11 +39,16 @@ model Client {
   id                      String @id @default(uuid())
   transportationCompanyId String
 
+  externalCode String
   name         String
-  contactName  String?
-  contactEmail String?
-  contactPhone String?
-  isActive     Boolean @default(true)
+
+  primaryPhone       String?
+  secondaryPhone     String?
+  mobilePhone        String?
+  institutionAddress String?
+  notes              String?
+
+  isActive Boolean @default(true)
 
   transportationCompany TransportationCompany @relation(fields: [transportationCompanyId], references: [id])
 
@@ -53,7 +58,11 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([transportationCompanyId, externalCode])
   @@index([transportationCompanyId])
+  @@index([externalCode])
+  @@index([isActive])
+
   @@map("clients")
 }
 

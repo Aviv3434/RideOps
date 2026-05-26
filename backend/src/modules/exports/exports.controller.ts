@@ -9,10 +9,7 @@ export async function exportApprovedTripsController(
   try {
     const result = await exportsService.exportApprovedTrips(req.user);
 
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
+    res.setHeader("Content-Type", "application/vnd.ms-excel");
 
     res.setHeader(
       "Content-Disposition",

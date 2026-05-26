@@ -10,6 +10,21 @@ type CurrentUser = {
   clientId?: string | null;
 };
 
+function formatDateForExcel(date: Date): string {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}/${month}/${year}`;
+}
+
+function formatTimeForExcel(date: Date): string {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${hours}:${minutes}`;
+}
+
 export async function exportApprovedTrips(currentUser: CurrentUser) {
   if (currentUser.role !== "COMPANY_ADMIN") {
     throw new AppError("Forbidden", 403);
@@ -39,38 +54,58 @@ export async function exportApprovedTrips(currentUser: CurrentUser) {
   }
 
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet("Approved Trips");
+  const worksheet = workbook.addWorksheet("יבוא מוניות");
 
-  worksheet.columns = [
-    { header: "Trip Number", key: "tripNumber", width: 15 },
-    { header: "Client", key: "clientName", width: 25 },
-    { header: "Pickup Date", key: "pickupDate", width: 18 },
-    { header: "Pickup Time", key: "pickupTime", width: 18 },
-    { header: "Pickup Location", key: "pickupLocation", width: 30 },
-    { header: "Destination", key: "destination", width: 30 },
-    { header: "Passengers", key: "passengerCount", width: 15 },
-    { header: "Notes", key: "notes", width: 40 },
+  worksheet.views = [
+    {
+      rightToLeft: true,
+    },
   ];
 
-  for (const trip of trips) {
-    const pickupDate = trip.pickupDateTime.toISOString().slice(0, 10);
-    const pickupTime = trip.pickupDateTime.toISOString().slice(11, 16);
-
-    worksheet.addRow({
-      tripNumber: trip.tripNumber,
-      clientName: trip.client.name,
-      pickupDate,
-      pickupTime,
-      pickupLocation: trip.pickupLocation,
-      destination: trip.destination,
-      passengerCount: trip.passengerCount,
-      notes: trip.notes || "",
-    });
-  }
+  worksheet.columns = [
+    { header: "שם לקוח", key: "clientName", width: 28 },
+    { header: "תאריך", key: "date", width: 14 },
+    { header: "שעת התחלה", key: "startTime", width: 14 },
+    { header: "תאור", key: "description", width: 55 },
+    { header: "הערות", key: "notes", width: 35 },
+    { header: "שם הנהג", key: "driverName", width: 18 },
+    { header: "מחיר לקוח", key: "clientPrice", width: 14 },
+    { header: "מחיר נהג", key: "driverPrice", width: 14 },
+    { header: "מספר ויזה", key: "identifier", width: 16 },
+  ];
 
   worksheet.getRow(1).font = {
     bold: true,
   };
+
+  worksheet.getRow(1).alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+
+  for (const trip of trips) {
+    const pickupDateTime = trip.pickupDateTime;
+
+    worksheet.addRow({
+      clientName: trip.client.name,
+      date: formatDateForExcel(pickupDateTime),
+      startTime: formatTimeForExcel(pickupDateTime),
+      description: `איסוף: ${trip.pickupLocation} | יעד: ${trip.destination} | נוסעים: ${trip.passengerCount}`,
+      notes: trip.notes || "",
+      driverName: "",
+      clientPrice: "",
+      driverPrice: "",
+      identifier: trip.tripNumber,
+    });
+  }
+
+  worksheet.eachRow((row) => {
+    row.alignment = {
+      horizontal: "right",
+      vertical: "middle",
+      wrapText: true,
+    };
+  });
 
   const buffer = await workbook.xlsx.writeBuffer();
 
@@ -91,8 +126,8 @@ export async function exportApprovedTrips(currentUser: CurrentUser) {
 
   return {
     buffer,
-    fileName: `rideops-approved-trips-${new Date()
+    fileName: `rideops-taxi-import-${new Date()
       .toISOString()
-      .slice(0, 10)}.xlsx`,
+      .slice(0, 10)}.xls`,
   };
 }

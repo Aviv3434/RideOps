@@ -6,6 +6,7 @@ import { errorMiddleware } from "./middlewares/error.middleware";
 import tripsRoutes from "./modules/trips/trips.routes";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes";
 import exportsRoutes from "./modules/exports/exports.routes";
+import clientsRoutes from "./modules/clients/clients.routes";
 console.log("EXPORTS ROUTES IMPORTED:", exportsRoutes);
 console.log("APP FILE LOADED");
 
@@ -34,6 +35,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/trips", tripsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/exports", exportsRoutes);
+app.use("/api/clients", clientsRoutes);
 
 app.use(errorMiddleware);
 

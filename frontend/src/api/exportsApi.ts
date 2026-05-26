@@ -6,12 +6,12 @@ export async function exportApprovedTrips(): Promise<void> {
   });
 
   const blob = new Blob([response.data], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    type: "application/vnd.ms-excel",
   });
 
   const contentDisposition = response.headers["content-disposition"];
 
-  let fileName = "rideops-approved-trips.xlsx";
+  let fileName = "rideops-taxi-import.xls";
 
   if (contentDisposition) {
     const match = contentDisposition.match(/filename="(.+)"/);
@@ -19,6 +19,10 @@ export async function exportApprovedTrips(): Promise<void> {
     if (match?.[1]) {
       fileName = match[1];
     }
+  }
+
+  if (!fileName.endsWith(".xls")) {
+    fileName = fileName.replace(/\.xlsx$/i, ".xls");
   }
 
   const url = window.URL.createObjectURL(blob);
