@@ -27,7 +27,7 @@ export async function getClientByIdController(
 ) {
   try {
     const client = await clientsService.getClientById(
-      req.params.id,
+      String(req.params.id),
       req.user
     );
 
@@ -58,7 +58,7 @@ export async function updateClientController(
 ) {
   try {
     const client = await clientsService.updateClient(
-      req.params.id,
+      String(req.params.id),
       req.body,
       req.user
     );
