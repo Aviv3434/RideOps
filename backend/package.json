@@ -5,14 +5,15 @@
   "main": "dist/server.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
-    "prisma:seed": "prisma db seed",
-    "seed": "tsx prisma/seed.ts"
+  "dev": "tsx watch src/server.ts",
+  "build": "tsc",
+  "start": "node dist/server.js",
+  "prisma:generate": "prisma generate",
+  "prisma:migrate": "prisma migrate dev",
+  "prisma:migrate:deploy": "prisma migrate deploy",
+  "prisma:studio": "prisma studio",
+  "prisma:seed": "prisma db seed",
+  "seed": "tsx prisma/seed.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
